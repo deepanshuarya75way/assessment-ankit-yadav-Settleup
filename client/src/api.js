@@ -1,5 +1,5 @@
-const apiBaseUrl = process.env.REACT_APP_API_URL || "";
+const apiBaseUrl = (process.env.REACT_APP_API_URL || "").replace(/\/+$/, "");
 
 export function apiPath(path) {
-  return `${apiBaseUrl}${path}`;
+  return `${apiBaseUrl}/${String(path).replace(/^\/+/, "")}`;
 }
