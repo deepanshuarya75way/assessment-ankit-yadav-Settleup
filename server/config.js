@@ -1,0 +1,25 @@
+function parsePort(port) {
+  const parsedPort = Number(port);
+  if (!Number.isInteger(parsedPort) || parsedPort < 1) {
+    throw new Error("PORT must be a positive integer.");
+  }
+  return parsedPort;
+}
+
+function getServerConfig(env = process.env) {
+  if (!env.MONGODB_URI) {
+    throw new Error("MONGODB_URI must be set.");
+  }
+  if (!env.JWT_SECRET || env.JWT_SECRET === "YOUR_GENERATED_SECRET") {
+    throw new Error("JWT_SECRET must be set to a secure value.");
+  }
+
+  return {
+    corsOrigin: env.CORS_ORIGIN || "http://localhost:3000",
+    mongoDB: env.MONGODB_URI,
+    port: parsePort(env.PORT || "3001"),
+    jwtSecret: env.JWT_SECRET || "dev-only-change-me",
+  };
+}
+
+module.exports = { getServerConfig, parsePort };
