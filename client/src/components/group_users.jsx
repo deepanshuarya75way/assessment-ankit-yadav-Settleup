@@ -7,6 +7,7 @@ function GroupUsers(props) {
   const [settleAmount, setSettleAmount] = useState("");
   const [selectedUser, setSelectedUser] = useState("");
   const [busy, setBusy] = useState(false);
+  const [leaveAttempted,setLeaveAttempted]=useState(false);
 
   const debtMap = props.group.usersMinusActive.debts;
   const people = props.group.usersMinusActive.users;
@@ -49,7 +50,51 @@ function GroupUsers(props) {
       const youOwe = debt && debt.to === user.username;
       return <div className="member-row" key={user.username}><div className="avatar">{user.username[0]?.toUpperCase()}</div><div className="member-info"><strong>{user.username}</strong><span>{user.firstName} {user.lastName}</span></div><div className={`member-balance ${owesYou ? "positive" : youOwe ? "negative" : "neutral"}`}>{owesYou ? <><span>owes you</span><strong>{formatMoney(debt.amount)}</strong></> : youOwe ? <><span>you owe</span><strong>{formatMoney(debt.amount)}</strong></> : <span>settled</span>}</div>{!props.isOptimised && (owesYou || youOwe) && <button className="icon-action" title="Clear debt" onClick={() => clearDebt(debt)}>✓</button>}</div>;
     })}</div>}
+    
     <div className="group-actions">
+    {!canLeave && (
+      <div className="settlement-warning" role="alert">
+        <h3>Settle Before Leaving </h3>
+        <p>
+          Your net balance is {formatMoney(myNet)};
+          You Cannot Leave until your balance is zero.
+        </p>
+
+        <ul>
+          {people.map((user)=>{
+            const debt=debtMap[user.username];
+            if(!debt|| Number(debt.amount)<=0){
+              return null;
+            }
+
+            const uowe= debt.from===props.group.activeUser 
+            && debt.to===user.username;
+
+            const theyoweu=
+            debt.from===user.username &&
+            debt.to === props.group.activeUser;
+
+            if(!uowe && !theyoweu){
+              return null;
+            }
+
+            return (
+              <li key ={user.username}>
+                {uowe
+                ? `You Owe ${user.username}`:
+                `${user.username} Owes U`
+                }
+                {" - "}
+                {formatMoney(debt.amount)}
+              </li>
+            );
+            
+          })}
+          </ul>
+
+      </div>
+        
+    )}
       <div><span className="eyebrow">Workspace</span><strong>{props.isOwner ? "Owner controls" : "Your access"}</strong><span>{canLeave ? "Your net balance is settled, so you can leave this group." : `Settle your net balance before leaving this group.`}</span></div>
       {props.isOwner ? <button className="button button-danger-ghost" disabled={!allMembersSettled} title={!allMembersSettled ? "Every member must have a net balance of ₹0.00 before deletion." : undefined} onClick={() => { if (canLeave && window.confirm("Delete this group and all its expenses? This cannot be undone.")) props.onDeleteGroup(); }}>Delete group</button> : <button className="button button-ghost" disabled={!canLeave} title={!canLeave ? "Your net balance must be ₹0.00." : undefined} onClick={() => { if (canLeave && window.confirm("Leave this group?")) props.onLeaveGroup(); }}>Leave group</button>}
     </div>

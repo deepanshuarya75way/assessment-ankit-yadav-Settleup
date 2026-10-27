@@ -109,7 +109,29 @@ exports.leaveGroup = async (request, response) => {
   const username = request.user.username;
   const netDebt = await getNetDebt(group._id, username);
   if (netDebt !== 0) {
-    return response.status(400).json({ error: "You can leave a group only when your net balance is ₹0.00." });
+    const debts= await debtModel.find({
+      groupId : group_id,
+      $or:[
+        {from:username},
+        {to:username}
+      ],
+    })
+    .lean()
+
+    const outstandingdebt=debts.map((debt)=>{
+      const mustpay=debt.from===username;
+      return {
+        counterParty : mustpay ? debt.to : debt.from,
+        direction:mustpay ? "Pay":"recieve",
+        amountrs: debt.amount,
+      }
+
+    });
+    return response.status(400).json({error:"You must settle everything before You leave",
+      balancers : netDebt,
+      debts : outstandingdebt,
+    });
+    // return response.status(400).json({ error: "You can leave a group only when your net balance is ₹0.00." });
   }
 
   if (group.owner.equals(request.user._id)) {
