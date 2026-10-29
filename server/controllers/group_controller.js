@@ -108,8 +108,10 @@ exports.leaveGroup = async (request, response) => {
   const group = await getGroupForUser(request.params.groupId, request.user._id);
   const username = request.user.username;
   const netDebt = await getNetDebt(group._id, username);
+
   if (netDebt !== 0) {
-    return response.status(400).json({ error: "You can leave a group only when your net balance is ₹0.00." });
+    return response.status(400).json({ error: "You can leave a group only when your net balance is ₹0.00."
+     });
   }
 
   if (group.owner.equals(request.user._id)) {
